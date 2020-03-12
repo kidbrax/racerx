@@ -1,0 +1,59 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    packages:
+      - awscli
+      - jq
+      - speedtest
+    access_key: "{{access_key}}"
+    access_secret: "{{access_secret}}"
+
+  tasks:
+    - name: Add an apt key for speedtest
+      apt_key:
+        keyserver: keyserver.ubuntu.com
+        id: 379CE192D401AB61
+
+    - name: Add speedtest apt repo
+      apt_repository:
+        repo: deb https://ookla.bintray.com/debian bionic main
+        state: present
+
+    - name: Install required packages
+      apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: yes
+
+    - name: Initial speedtest to accept license
+      command: speedtest --accept-license
+
+    - name: make sure .aws dir exists
+      file:
+        path: /root/.aws
+        state: directory
+
+    - name: set AWS credentials
+      template:
+        src: templates/credentials.template
+        dest: ~/.aws/credentials
+
+    - name: test AWS CLI
+      command: aws sts get-caller-identity --profile speedtester
+
+    - name: Copy file with owner and permissions
+      copy:
+        src: files/speed.sh
+        dest: /root/speed.sh
+        # owner: foo
+        # group: foo
+        mode: '0755'
+
+    # set crontab for speed.sh
+    - name: Set cron to run speedtest hourly
+      cron:
+        name: "run speedtest"
+        minute: "3"
+        hour: "*"
+        job: "/root/speed.sh"
