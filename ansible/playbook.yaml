@@ -26,9 +26,6 @@
         state: present
         update_cache: yes
 
-    - name: Initial speedtest to accept license
-      command: speedtest --accept-license
-
     - name: make sure .aws dir exists
       file:
         path: /root/.aws
@@ -39,21 +36,29 @@
         src: templates/credentials.template
         dest: ~/.aws/credentials
 
+    - name: Copy AWS config
+      copy:
+        src: files/config
+        dest: ~/.aws/config
+        mode: '0555'
+
     - name: test AWS CLI
       command: aws sts get-caller-identity --profile speedtester
 
-    - name: Copy file with owner and permissions
+    - name: Copy script
       copy:
         src: files/speed.sh
         dest: /root/speed.sh
-        # owner: foo
-        # group: foo
         mode: '0755'
+      tags:
+        - deploy
 
-    # set crontab for speed.sh
+    - name: Initial speedtest to accept license
+      command: speedtest --accept-license
+
     - name: Set cron to run speedtest hourly
       cron:
         name: "run speedtest"
         minute: "3"
         hour: "*"
-        job: "/root/speed.sh"
+        job: "/root/speed.sh >> /var/log/racerx.log"
