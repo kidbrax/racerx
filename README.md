@@ -10,6 +10,7 @@ It uses ansible to install and configure your rpi. It then runs speedtest at the
 
 To install, first make sure you have Ansible installed, then run the following Ansible command from the root of this repo, replacing the key/secret with your own AWS credentials.
 
+Also make sure your hosts.yamnl is configfured correctly
 ``` shell
 ansible-playbook ansible/playbook.yaml \
   --inventory-file ansible/hosts.yaml \
@@ -18,6 +19,7 @@ ansible-playbook ansible/playbook.yaml \
 
 ## TODO
 
-- log all speedtests to log file
-- use CFN/CDK to create restricted role that we can assume
+- use CFN/CDK to create restricted role and log setup, etc
 - setup logrotate?
+- make sure timestamp is recorded with UTC
+- make hosts.yaml more configurable

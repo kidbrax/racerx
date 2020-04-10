@@ -78,21 +78,33 @@ function log_to_cloudwatch () {
   echo "Finished sending logs to cloudwatch"
 }
 
+function put_metrics () {
+# push metrics to Cloudwatch
+
+upload_speed=$(jq -c '.[0].message| fromjson | .upload.bandwidth' put-events.log) # bits/second
+download_speed=$(jq -c '.[0].message| fromjson | .download.bandwidth' put-events.log)
+
+echo "download speed: $download_speed"
+echo "upload speed: $upload_speed"
+
+# send results to cloudwatch
+aws cloudwatch put-metric-data \
+  --namespace racerx \
+  --metric-name speedtest \
+  --unit Bytes \
+  --value "$download_speed" \
+  --dimensions Direction=download
+
+aws cloudwatch put-metric-data \
+  --namespace racerx \
+  --metric-name speedtest \
+  --unit Bytes \
+  --value "$upload_speed" \
+  --dimensions Direction=upload
+}
+
 manage_log_group
 manage_log_stream
 run_speedtest
 log_to_cloudwatch
-
-
-# push metric to Cloudwatch
-# download_speed=$(echo $results | jq '.download.bandwidth') # bits/second
-# upload_speed=$(echo $results | jq '.upload.bandwidth')
-
-# send results to cloudwatch
-# aws cloudwatch put-metric-data \
-#   --region us-east-1 \
-#   --namespace racerx \
-#   --metric-name speedtest \
-#   --unit Bytes \
-#   --value 101 \
-#   --dimensions Direction=download
+put_metrics

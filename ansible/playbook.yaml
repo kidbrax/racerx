@@ -59,6 +59,6 @@
     - name: Set cron to run speedtest hourly
       cron:
         name: "run speedtest"
-        minute: "3"
+        minute: "3,33"
         hour: "*"
         job: "/root/speed.sh >> /var/log/racerx.log"
